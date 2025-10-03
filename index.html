@@ -5,90 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>प्रमाण पत्र जनरेटर</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
-
   <style>
-    body {
-      font-family: "Noto Sans Devanagari", sans-serif;
-      text-align: center;
-      background: #f8f8f8;
-    }
-
-    .input-section {
-      margin: 20px;
-    }
-
+    body { font-family: "Noto Sans Devanagari", sans-serif; text-align: center; background: #f8f8f8; }
+    .input-section { margin: 20px; }
     .certificate {
-      position: relative;
-      width: 800px;
-      height: 650px;
-      margin: 20px auto;
-      display: none;
-      border: 4px solid #d4af37;
-      background: url("background.png") no-repeat center center;
-      background-size: cover;
+      position: relative; width: 800px; height: 600px; margin: 20px auto;
+      display: none; border: 4px solid #d4af37;
+      background: url("background.png") no-repeat center center; background-size: cover;
     }
-
-    .header-text {
-      position: absolute;
-      top: 60px;
-      width: 100%;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .main-title {
-      position: absolute;
-      top: 160px;
-      width: 100%;
-      text-align: center;
-      font-size: 30px;
-      font-weight: bold;
-      color: #0b3d91;
-    }
-
-    .name-line {
-      position: absolute;
-      top: 260px;
-      width: 100%;
-      text-align: center;
-      font-size: 22px;
-    }
-
-    .details-line {
-      position: absolute;
-      top: 330px;
-      width: 100%;
-      text-align: center;
-      font-size: 20px;
-      color: #333;
-    }
-
-    .footer-text {
-      position: absolute;
-      bottom: 60px;
-      width: 100%;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #0b3d91;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    input {
-      padding: 8px;
-      font-size: 16px;
-      width: 250px;
-      margin: 5px 0;
-    }
+    .header-text { position: absolute; top: 60px; width: 100%; text-align: center; font-size: 20px; font-weight: bold; }
+    .main-title { position: absolute; top: 180px; width: 100%; text-align: center; font-size: 30px; font-weight: bold; color: #0b3d91; }
+    .name-line { position: absolute; top: 280px; width: 100%; text-align: center; font-size: 22px; }
+    .footer-text { position: absolute; bottom: 60px; width: 100%; text-align: center; font-size: 18px; }
+    button { margin-top: 10px; padding: 10px 20px; font-size: 16px; background: #0b3d91; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    input { padding: 8px; font-size: 16px; width: 250px; margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -114,11 +44,6 @@
       नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong>
     </div>
 
-    <div class="details-line">
-      मोबाइल: <span id="mobileText">____</span> | 
-      ईमेल: <span id="emailText">____</span>
-    </div>
-
     <div class="footer-text">
       को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु<br>
       प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।
@@ -128,22 +53,30 @@
   <!-- html2canvas library -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
+    const scriptURL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL"; // यहां अपना Web App URL डालें
+
     function generateCertificate() {
       const name = document.getElementById("nameInput").value.trim();
       const mobile = document.getElementById("mobileInput").value.trim();
       const email = document.getElementById("emailInput").value.trim();
 
       if (!name || !mobile || !email) {
-        alert("कृपया सभी विवरण भरें (नाम, मोबाइल और ईमेल)।");
+        alert("कृपया सभी विवरण भरें।");
         return;
       }
 
+      // सर्टिफिकेट में नाम दिखाएँ
       document.getElementById("nameText").textContent = name;
-      document.getElementById("mobileText").textContent = mobile;
-      document.getElementById("emailText").textContent = email;
-
       document.getElementById("certificate").style.display = "block";
       window.scrollTo(0, document.getElementById("certificate").offsetTop);
+
+      // Google Sheet में सेव करें
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify({ name: name, mobile: mobile, email: email })
+      })
+      .then(res => console.log("Saved to Sheet"))
+      .catch(err => console.error("Error!", err));
     }
 
     function downloadCertificate() {
@@ -153,10 +86,7 @@
         return;
       }
 
-      html2canvas(cert, {
-        scale: 2,
-        useCORS: true
-      }).then(canvas => {
+      html2canvas(cert, { scale: 2, useCORS: true }).then(canvas => {
         const link = document.createElement("a");
         link.download = "certificate.png";
         link.href = canvas.toDataURL("image/png");
