@@ -146,18 +146,21 @@ async function generateCertificate() {
 
   // ✅ Correct verification link (matches your GitHub repo path)
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
-  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(verifyLink)}`;
+
+  // ✅ Bigger QR for clarity
+  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
 
   // Update certificate content
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
   document.getElementById("qrCode").src = qrUrl;
   document.getElementById("qrLink").href = verifyLink;
+
+  // Wait for QR to load
+  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
+
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
-
-  // Wait until QR is loaded
-  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
 
   // Send data to Google Sheet
   const formData = new FormData();
@@ -173,7 +176,7 @@ async function generateCertificate() {
 
 async function downloadCertificate() {
   const cert = document.getElementById("certificate");
-  await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
+  await html2canvas(cert, { scale: 4, useCORS: true, allowTaint: true }).then(canvas => {
     const link = document.createElement("a");
     link.download = "certificate.png";
     link.href = canvas.toDataURL("image/png", 1.0);
