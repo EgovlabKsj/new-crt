@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head><meta charset="UTF-8"><title>Certificate Verification</title></head>
+<body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+<h2>Certificate Verification</h2>
+<div id="result"></div>
+<script>
+const sheetID="YOUR_SHEET_ID";
+const sheetName="Sheet1";
+const url=`https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+const params=new URLSearchParams(window.location.search);
+const ref=params.get("ref");
+
+fetch(url)
+.then(res=>res.text())
+.then(data=>{
+  const json=JSON.parse(data.substring(data.indexOf("{"),data.lastIndexOf("}")+1));
+  const rows=json.table.rows;
+  let found=false;
+  for(const r of rows){
+    if(r.c[4] && r.c[4].v===ref){
+      const name=r.c[0].v;
+      const mobile=r.c[1].v;
+      const email=r.c[2].v;
+      const qrUrl=r.c[3].v;
+      document.getElementById("result").innerHTML=`
+        <p>यह प्रमाण पत्र वैध है।</p>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Mobile:</b> ${mobile}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Reference No:</b> ${ref}</p>
+        <img src="${qrUrl}" alt="QR Code">
+      `;
+      found=true; break;
+    }
+  }
+  if(!found){document.getElementById("result").innerHTML="<p>अमान्य प्रमाण पत्र।</p>";}
+})
+.catch(err=>document.getElementById("result").innerHTML="Error fetching data.");
+</script>
+</body>
+</html>
