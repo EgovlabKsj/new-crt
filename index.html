@@ -114,10 +114,13 @@
     प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।
   </div>
   <div class="ref-no" id="refNoText"></div>
-  <img id="qrCode" class="qr-code" alt="QR Code" crossorigin="anonymous" />
+  <canvas id="qrCanvas" class="qr-code"></canvas>
 </div>
 
+<!-- ✅ Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <script>
 const scriptURL = "https://script.google.com/macros/s/AKfycbzcohePSKpEc64xp7JkuJgzW8IaYXAYfauyqAHR-U3QspIa-Gp5uL_X47vS3eXp2rFQ/exec";
 let referenceNo = "";
@@ -141,19 +144,22 @@ function generateCertificate() {
                     String(now.getSeconds()).padStart(2,'0');
 
   referenceNo = `${timestamp}/Ksj/CRT`;
+
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "ReferenceNo.-: " + referenceNo;
 
-  // Create QR Code and wait until loaded
-  const qrURL = "https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=" + encodeURIComponent(referenceNo);
-  const qrImg = document.getElementById("qrCode");
-  qrImg.src = qrURL;
-  qrImg.onload = () => {
-    document.getElementById("certificate").style.display = "block";
-    window.scrollTo(0, document.getElementById("certificate").offsetTop);
-  };
+  // ✅ Generate QR code locally (no CORS issue)
+  const qr = new QRious({
+    element: document.getElementById('qrCanvas'),
+    value: referenceNo,
+    size: 90,
+    level: 'H'
+  });
 
-  // Send to Google Sheet
+  document.getElementById("certificate").style.display = "block";
+  window.scrollTo(0, document.getElementById("certificate").offsetTop);
+
+  // ✅ Send data to Google Sheet
   fetch(scriptURL, {
     method: "POST",
     body: JSON.stringify({ name, mobile, email, referenceNo }),
@@ -166,13 +172,6 @@ function generateCertificate() {
 
 async function downloadCertificate() {
   const cert = document.getElementById("certificate");
-
-  // Wait until QR fully loaded
-  const qrImg = document.getElementById("qrCode");
-  if (!qrImg.complete) {
-    alert("QR कोड लोड हो रहा है, कृपया 1 सेकंड बाद पुनः डाउनलोड करें।");
-    return;
-  }
 
   await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
     const link = document.createElement("a");
