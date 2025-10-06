@@ -6,85 +6,28 @@
 <title>प्रमाण पत्र जनरेटर</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family: "Noto Sans Devanagari", sans-serif;
-    text-align: center;
-    background: #f8f8f8;
-  }
-  .input-section { margin: 20px; }
-  .certificate {
-    position: relative;
-    width: 800px;
-    height: 600px;
-    margin: 20px auto;
-    display: none;
-    border: 4px solid #d4af37;
-    background: url("https://egovlabksj.github.io/crt-generator/certificate-bg1.png") no-repeat center center;
-    background-size: cover;
-    image-rendering: crisp-edges;
-  }
-  .header-text {
-    position: absolute;
-    top: 150px;
-    width: 100%;
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-  }
-  .main-title {
-    position: absolute;
-    top: 240px;
-    width: 100%;
-    text-align: center;
-    font-size: 30px;
-    font-weight: bold;
-    color: #0b3d91;
-  }
-  .name-line {
-    position: absolute;
-    top: 280px;
-    width: 100%;
-    text-align: center;
-    font-size: 22px;
-  }
-  .footer-text {
-    position: absolute;
-    bottom: 120px;
-    width: 100%;
-    text-align: center;
-    font-size: 18px;
-  }
-  .ref-no {
-    position: absolute;
-    bottom: 20px;
-    left: 30px;
-    font-size: 14px;
-    color: #000;
-    font-style: italic;
-  }
-  #qrCode {
-    position: absolute;
-    bottom: 15px;
-    right: 20px;
-    width: 80px;
-    height: 80px;
-  }
-  button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background: #0b3d91;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  input {
-    padding: 8px;
-    font-size: 16px;
-    width: 250px;
-    margin: 5px;
-  }
+body { font-family: "Noto Sans Devanagari", sans-serif; text-align: center; background: #f8f8f8; }
+.input-section { margin: 20px; }
+.certificate {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  margin: 20px auto;
+  display: none;
+  border: 4px solid #d4af37;
+  background: url("https://egovlabksj.github.io/crt-generator/certificate-bg1.png") no-repeat center center;
+  background-size: cover;
+  image-rendering: crisp-edges;
+}
+.header-text { position: absolute; top: 150px; width: 100%; text-align: center; font-size: 20px; font-weight: bold; }
+.main-title { position: absolute; top: 240px; width: 100%; text-align: center; font-size: 30px; font-weight: bold; color: #0b3d91; }
+.name-line { position: absolute; top: 280px; width: 100%; text-align: center; font-size: 22px; }
+.footer-text { position: absolute; bottom: 120px; width: 100%; text-align: center; font-size: 18px; }
+.ref-no { position: absolute; bottom: 20px; left: 30px; font-size: 14px; color: #000; font-style: italic; }
+#qrLink { position: absolute; bottom: 15px; right: 20px; display: inline-block; }
+#qrCode { width: 80px; height: 80px; cursor: pointer; }
+button { margin-top: 10px; padding: 10px 20px; font-size: 16px; background: #0b3d91; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 </style>
 </head>
 <body>
@@ -93,8 +36,7 @@
   <h2>ऑटोमेटिक प्रमाण पत्र जनरेटर</h2>
   <input type="text" id="nameInput" placeholder="अपना नाम दर्ज करें">
   <input type="text" id="mobileInput" placeholder="मोबाइल नंबर दर्ज करें">
-  <input type="email" id="emailInput" placeholder="ईमेल दर्ज करें">
-  <br>
+  <input type="email" id="emailInput" placeholder="ईमेल दर्ज करें"><br>
   <button onclick="generateCertificate()">प्रमाण पत्र दिखाएं</button>
   <button onclick="downloadCertificate()">PNG डाउनलोड करें</button>
 </div>
@@ -105,67 +47,50 @@
   <div class="name-line">यह प्रमाण पत्र <span id="nameText">____</span><br>नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong></div>
   <div class="footer-text">को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु<br>प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।</div>
   <div class="ref-no" id="refNoText"></div>
-  <img id="qrCode" src="" alt="QR Code">
+  <a id="qrLink" href="#" target="_blank"><img id="qrCode" src="" alt="QR Code"></a>
 </div>
 
-<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbzcohePSKpEc64xp7JkuJgzW8IaYXAYfauyqAHR-U3QspIa-Gp5uL_X47vS3eXp2rFQ/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with Apps Script URL
 let referenceNo = "";
 
 function generateCertificate() {
   const name = document.getElementById("nameInput").value.trim();
   const mobile = document.getElementById("mobileInput").value.trim();
   const email = document.getElementById("emailInput").value.trim();
+  if(!name||!mobile||!email){alert("कृपया सभी विवरण भरें।");return;}
 
-  if (!name || !mobile || !email) {
-    alert("कृपया सभी विवरण भरें।");
-    return;
-  }
-
-  // Generate reference number
   const now = new Date();
-  const timestamp = now.getFullYear().toString() +
-                    String(now.getMonth() + 1).padStart(2, "0") +
-                    String(now.getDate()).padStart(2, "0") +
-                    String(now.getHours()).padStart(2, "0") +
-                    String(now.getMinutes()).padStart(2, "0") +
-                    String(now.getSeconds()).padStart(2, "0");
-  referenceNo = `${timestamp}/Ksj/CRT`;
+  referenceNo = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}/Ksj/CRT`;
 
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
 
-  // ✅ Generate QR Code
-  const qr = new QRious({
-    element: document.getElementById("qrCode"),
-    value: `Name: ${name}\nRef: ${referenceNo}\nDistrict: Kasganj`,
-    size: 80
-  });
+  const verifyLink = `https://egovlabksj.github.io/crt-generator/verify.html?ref=${encodeURIComponent(referenceNo)}`;
+  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(verifyLink)}`;
+  document.getElementById("qrLink").href = verifyLink;
+  document.getElementById("qrCode").src = qrUrl;
 
-  // ✅ Send data to Google Sheet
   const formData = new FormData();
   formData.append("name", name);
   formData.append("mobile", mobile);
   formData.append("email", email);
   formData.append("referenceNo", referenceNo);
 
-  fetch(scriptURL, { method: "POST", body: formData })
-    .then(() => console.log("Data sent to Google Sheet"))
-    .catch(err => console.error("Error!", err));
+  fetch(scriptURL, {method:"POST", body: formData})
+    .then(()=>console.log("Data sent"))
+    .catch(err=>console.error("Error!", err));
 }
 
 async function downloadCertificate() {
   const cert = document.getElementById("certificate");
-  await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "certificate.png";
-    link.href = canvas.toDataURL("image/png", 1.0);
+  await html2canvas(cert, {scale:4,useCORS:true}).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="certificate.png";
+    link.href=canvas.toDataURL("image/png",1.0);
     link.click();
   });
 }
