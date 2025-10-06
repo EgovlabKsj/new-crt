@@ -46,9 +46,12 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 <img id="qrCode" alt="QR Code">
 </div>
 
+<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
 <script>
-const scriptURL = "YOUR_DEPLOYED_WEB_APP_URL_HERE"; // Replace with your Apps Script Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script Web App URL
 
 document.getElementById("generateBtn").addEventListener("click", async function() {
   const name = document.getElementById("nameInput").value.trim();
@@ -61,22 +64,21 @@ document.getElementById("generateBtn").addEventListener("click", async function(
   const referenceNo = `${timestamp}/Ksj/CRT`;
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
 
-  // Generate QR URL
-  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
+  // Generate QR as Base64
+  const qrBase64 = await QRCode.toDataURL(verifyLink, { width: 150, margin: 1 });
 
   // Show certificate
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
-  const qrImg = document.getElementById("qrCode");
-  qrImg.src = qrUrl;
+  document.getElementById("qrCode").src = qrBase64;
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
 
-  // Send data + QR URL to Apps Script
+  // Send to Apps Script
   try {
     const res = await fetch(scriptURL, {
       method: "POST",
-      body: JSON.stringify({ name, mobile, email, qrUrl }),
+      body: JSON.stringify({ name, mobile, email, qrBase64 }),
       headers: { "Content-Type": "application/json" }
     });
     const json = await res.json();
