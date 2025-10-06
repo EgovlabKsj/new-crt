@@ -8,12 +8,7 @@
 <style>
 body { font-family: "Noto Sans Devanagari", sans-serif; text-align: center; background: #f8f8f8; }
 .input-section { margin: 20px; }
-.certificate {
-  position: relative; width: 800px; height: 600px; margin: 20px auto; display: none;
-  border: 4px solid #d4af37;
-  background: url("https://egovlabksj.github.io/crt-generator/certificate-bg1.png") no-repeat center center;
-  background-size: cover; image-rendering: crisp-edges;
-}
+.certificate { position: relative; width: 800px; height: 600px; margin: 20px auto; display: none; border: 4px solid #d4af37; background: url("https://egovlabksj.github.io/crt-generator/certificate-bg1.png") no-repeat center center; background-size: cover; }
 .header-text { position: absolute; top: 150px; width: 100%; text-align: center; font-size: 20px; font-weight: bold; }
 .main-title { position: absolute; top: 240px; width: 100%; text-align: center; font-size: 30px; font-weight: bold; color: #0b3d91; }
 .name-line { position: absolute; top: 280px; width: 100%; text-align: center; font-size: 22px; }
@@ -27,73 +22,88 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 <body>
 
 <div class="input-section">
-  <h2>ऑटोमेटिक प्रमाण पत्र जनरेटर</h2>
-  <input type="text" id="nameInput" placeholder="अपना नाम दर्ज करें">
-  <input type="text" id="mobileInput" placeholder="मोबाइल नंबर दर्ज करें">
-  <input type="email" id="emailInput" placeholder="ईमेल दर्ज करें"><br>
-  <button onclick="generateCertificate()">प्रमाण पत्र दिखाएं</button>
-  <button onclick="downloadCertificate()">PNG डाउनलोड करें</button>
+<h2>ऑटोमेटिक प्रमाण पत्र जनरेटर</h2>
+<input type="text" id="nameInput" placeholder="अपना नाम दर्ज करें">
+<input type="text" id="mobileInput" placeholder="मोबाइल नंबर दर्ज करें">
+<input type="email" id="emailInput" placeholder="ईमेल दर्ज करें">
+<br>
+<button onclick="generateCertificate()">प्रमाण पत्र दिखाएं</button>
+<button onclick="downloadCertificate()">PNG डाउनलोड करें</button>
 </div>
 
 <div id="certificate" class="certificate">
-  <div class="header-text">परम राज्य : विकसित यूपी@2047<br>संकल्प से समृद्धि तक</div>
-  <div class="main-title">सहभागिता प्रमाण पत्र</div>
-  <div class="name-line">यह प्रमाण पत्र <span id="nameText">____</span><br>नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong></div>
-  <div class="footer-text">को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु प्रदान किया जाता है।</div>
-  <div class="ref-no" id="refNoText"></div>
-  <a id="qrLink" target="_blank"><img id="qrCode" alt="QR Code"></a>
+<div class="header-text">परम राज्य : विकसित यूपी@2047<br>संकल्प से समृद्धि तक</div>
+<div class="main-title">सहभागिता प्रमाण पत्र</div>
+<div class="name-line">
+यह प्रमाण पत्र <span id="nameText">____</span><br>
+नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong>
+</div>
+<div class="footer-text">
+को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु<br>
+प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।
+</div>
+<div class="ref-no" id="refNoText"></div>
+<img id="qrCode" alt="QR Code">
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script URL
-let referenceNo = "";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script Web App URL
 
-async function generateCertificate() {
+function generateCertificate() {
   const name = document.getElementById("nameInput").value.trim();
   const mobile = document.getElementById("mobileInput").value.trim();
   const email = document.getElementById("emailInput").value.trim();
-  if(!name || !mobile || !email){ alert("कृपया सभी विवरण भरें।"); return; }
 
-  const now = new Date();
-  referenceNo = now.getFullYear().toString() +
-                String(now.getMonth()+1).padStart(2,'0') +
-                String(now.getDate()).padStart(2,'0') +
-                String(now.getHours()).padStart(2,'0') +
-                String(now.getMinutes()).padStart(2,'0') +
-                String(now.getSeconds()).padStart(2,'0') + "/Ksj/CRT";
+  if(!name || !mobile || !email) { alert("कृपया सभी विवरण भरें। return"); return; }
 
-  // Send data to Apps Script (doPost)
-  const formData = new FormData();
-  formData.append("name", name);
-  formData.append("mobile", mobile);
-  formData.append("email", email);
-  formData.append("referenceNo", referenceNo);
+  const timestamp = new Date().toISOString().replace(/[-:.TZ]/g,"");
 
-  const res = await fetch(scriptURL, { method: "POST", body: formData });
-  const data = await res.json();
-  const qrSrc = data.qrBase64;
+  const referenceNo = `${timestamp}/Ksj/CRT`;
 
+  // Generate QR (Google Chart API)
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
-  document.getElementById("nameText").textContent = name;
-  document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
-  document.getElementById("qrCode").src = qrSrc;
-  document.getElementById("qrLink").href = verifyLink;
+  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
 
-  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
-  document.getElementById("certificate").style.display = "block";
-  window.scrollTo(0, document.getElementById("certificate").offsetTop);
+  // Convert QR to Base64
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = qrUrl;
+
+  img.onload = async function() {
+    // Draw QR on canvas to get Base64
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    const qrBase64 = canvas.toDataURL("image/png");
+
+    // Show QR on certificate
+    document.getElementById("qrCode").src = qrBase64;
+    document.getElementById("nameText").textContent = name;
+    document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
+    document.getElementById("certificate").style.display = "block";
+    window.scrollTo(0, document.getElementById("certificate").offsetTop);
+
+    // Send data to Apps Script
+    const data = { name, mobile, email, qrBase64 };
+    fetch(scriptURL, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } })
+    .then(res => res.json())
+    .then(r => console.log("Saved to Sheet:", r))
+    .catch(err => console.error("Error saving:", err));
+  }
 }
 
 async function downloadCertificate() {
   const cert = document.getElementById("certificate");
-  await html2canvas(cert, { scale: 4, useCORS: true, allowTaint: true }).then(canvas => {
+  await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
     const link = document.createElement("a");
     link.download = "certificate.png";
-    link.href = canvas.toDataURL("image/png", 1.0);
+    link.href = canvas.toDataURL("image/png",1.0);
     link.click();
   });
 }
 </script>
+
 </body>
 </html>
