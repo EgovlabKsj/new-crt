@@ -105,8 +105,14 @@
 <div id="certificate" class="certificate">
   <div class="header-text">परम राज्य : विकसित यूपी@2047<br>संकल्प से समृद्धि तक</div>
   <div class="main-title">सहभागिता प्रमाण पत्र</div>
-  <div class="name-line">यह प्रमाण पत्र <span id="nameText">____</span><br>नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong></div>
-  <div class="footer-text">को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु<br>प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।</div>
+  <div class="name-line">
+    यह प्रमाण पत्र <span id="nameText">____</span><br>
+    नगर निकाय: <strong>कासगंज</strong>, जनपद: <strong>कासगंज</strong>
+  </div>
+  <div class="footer-text">
+    को विकसित यूपी@2047 के विजन डॉक्यूमेंट तैयार किए जाने में आपके मूल्यवान सुझावों हेतु<br>
+    प्रदान किया जाता है। हम आपके विचारों और समर्पण की सराहना करते हैं।
+  </div>
   <div class="ref-no" id="refNoText"></div>
   <a id="qrLink" target="_blank">
     <img id="qrCode" alt="QR Code">
@@ -115,7 +121,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // <-- replace with your deployed Google Apps Script Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; 
 let referenceNo = "";
 
 async function generateCertificate() {
@@ -138,8 +144,8 @@ async function generateCertificate() {
 
   referenceNo = `${timestamp}/Ksj/CRT`;
 
-  // Verification link (must match your GitHub verify.html)
-  const verifyLink = `https://egovlabksj.github.io/crt-generator/verify.html?ref=${encodeURIComponent(referenceNo)}`;
+  // ✅ Correct verification link (matches your GitHub repo path)
+  const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
   const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(verifyLink)}`;
 
   // Update certificate content
@@ -150,20 +156,19 @@ async function generateCertificate() {
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
 
-  // Wait for QR to load before proceeding
-  await new Promise(resolve => {
-    document.getElementById("qrCode").onload = resolve;
-  });
+  // Wait until QR is loaded
+  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
 
-  // Send to Google Sheet
+  // Send data to Google Sheet
   const formData = new FormData();
   formData.append("name", name);
   formData.append("mobile", mobile);
   formData.append("email", email);
   formData.append("referenceNo", referenceNo);
+
   fetch(scriptURL, { method: "POST", body: formData })
-    .then(() => console.log("Data sent successfully"))
-    .catch(err => console.error("Error sending data!", err));
+    .then(() => console.log("✅ Data saved successfully"))
+    .catch(err => console.error("❌ Error sending data!", err));
 }
 
 async function downloadCertificate() {
