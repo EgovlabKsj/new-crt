@@ -1,43 +1,92 @@
 <!DOCTYPE html>
 <html lang="hi">
-<head><meta charset="UTF-8"><title>Certificate Verification</title></head>
-<body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-<h2>Certificate Verification</h2>
-<div id="result"></div>
-<script>
-const sheetID="11M7qhamMGoskjC7fa6_lCcu-Bnd3i60pF2DrYTFz8t4";
-const sheetName="Sheet1";
-const url=`https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-const params=new URLSearchParams(window.location.search);
-const ref=params.get("ref");
-
-fetch(url)
-.then(res=>res.text())
-.then(data=>{
-  const json=JSON.parse(data.substring(data.indexOf("{"),data.lastIndexOf("}")+1));
-  const rows=json.table.rows;
-  let found=false;
-  for(const r of rows){
-    if(r.c[4] && r.c[4].v===ref){
-      const name=r.c[0].v;
-      const mobile=r.c[1].v;
-      const email=r.c[2].v;
-      const qrUrl=r.c[3].v;
-      document.getElementById("result").innerHTML=`
-        <p>यह प्रमाण पत्र वैध है।</p>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Mobile:</b> ${mobile}</p>
-        <p><b>Email:</b> ${email}</p>
-        <p><b>Reference No:</b> ${ref}</p>
-        <img src="${qrUrl}" alt="QR Code">
-      `;
-      found=true; break;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>प्रमाण पत्र सत्यापन</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Noto Sans Devanagari", sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      padding: 40px;
     }
+    .verify-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: auto;
+    }
+    h2 {
+      color: #0b3d91;
+      margin-bottom: 20px;
+    }
+    .status {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .verified {
+      color: green;
+      font-weight: bold;
+    }
+    .not-found {
+      color: red;
+      font-weight: bold;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+<div class="verify-box">
+  <h2>प्रमाण पत्र सत्यापन पृष्ठ</h2>
+  <div id="result">Loading...</div>
+  <div class="footer">विकसित यूपी@2047 | जनपद कासगंज</div>
+</div>
+
+<script>
+const sheetURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // same as your Apps Script URL
+
+async function verifyCertificate() {
+  const params = new URLSearchParams(window.location.search);
+  const refNo = params.get("ref");
+
+  if (!refNo) {
+    document.getElementById("result").innerHTML = "<p class='not-found'>❌ Reference number missing.</p>";
+    return;
   }
-  if(!found){document.getElementById("result").innerHTML="<p>अमान्य प्रमाण पत्र।</p>";}
-})
-.catch(err=>document.getElementById("result").innerHTML="Error fetching data.");
+
+  try {
+    const res = await fetch(sheetURL + "?action=getData");
+    const data = await res.json();
+
+    const match = data.find(row => row.referenceNo === refNo);
+
+    if (match) {
+      document.getElementById("result").innerHTML = `
+        <p class='verified'>✅ प्रमाण पत्र सत्यापित है</p>
+        <p><strong>नाम:</strong> ${match.name}</p>
+        <p><strong>मोबाइल:</strong> ${match.mobile}</p>
+        <p><strong>ईमेल:</strong> ${match.email}</p>
+        <p><strong>संदर्भ संख्या:</strong> ${match.referenceNo}</p>
+      `;
+    } else {
+      document.getElementById("result").innerHTML = "<p class='not-found'>❌ अमान्य प्रमाण पत्र या डेटा नहीं मिला।</p>";
+    }
+  } catch (e) {
+    console.error(e);
+    document.getElementById("result").innerHTML = "<p class='not-found'>⚠️ सर्वर त्रुटि — कृपया पुनः प्रयास करें।</p>";
+  }
+}
+
+verifyCertificate();
 </script>
 </body>
 </html>
-
