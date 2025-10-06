@@ -1,92 +1,56 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>प्रमाण पत्र सत्यापन</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: "Noto Sans Devanagari", sans-serif;
-      background: #f4f4f4;
-      text-align: center;
-      padding: 40px;
-    }
-    .verify-box {
-      background: #fff;
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 500px;
-      margin: auto;
-    }
-    h2 {
-      color: #0b3d91;
-      margin-bottom: 20px;
-    }
-    .status {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-    .verified {
-      color: green;
-      font-weight: bold;
-    }
-    .not-found {
-      color: red;
-      font-weight: bold;
-    }
-    .footer {
-      margin-top: 30px;
-      font-size: 14px;
-      color: #555;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>प्रमाण पत्र सत्यापन</title>
+<style>
+body { font-family: "Noto Sans Devanagari", sans-serif; text-align: center; background: #f8f8f8; padding: 30px; }
+h2 { color: #0b3d91; }
+.details { margin-top: 20px; font-size: 18px; }
+.label { font-weight: bold; }
+.error { color: red; font-weight: bold; }
+</style>
 </head>
 <body>
 
-<div class="verify-box">
-  <h2>प्रमाण पत्र सत्यापन पृष्ठ</h2>
-  <div id="result">Loading...</div>
-  <div class="footer">विकसित यूपी@2047 | जनपद कासगंज</div>
-</div>
+<h2>प्रमाण पत्र सत्यापन</h2>
+<div id="content">सत्यापन हो रहा है...</div>
 
 <script>
-const sheetURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // same as your Apps Script URL
+const sheetAPI = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // same Apps Script URL
+const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
+const contentDiv = document.getElementById("content");
 
-async function verifyCertificate() {
-  const params = new URLSearchParams(window.location.search);
-  const refNo = params.get("ref");
-
-  if (!refNo) {
-    document.getElementById("result").innerHTML = "<p class='not-found'>❌ Reference number missing.</p>";
-    return;
-  }
-
-  try {
-    const res = await fetch(sheetURL + "?action=getData");
-    const data = await res.json();
-
-    const match = data.find(row => row.referenceNo === refNo);
-
-    if (match) {
-      document.getElementById("result").innerHTML = `
-        <p class='verified'>✅ प्रमाण पत्र सत्यापित है</p>
-        <p><strong>नाम:</strong> ${match.name}</p>
-        <p><strong>मोबाइल:</strong> ${match.mobile}</p>
-        <p><strong>ईमेल:</strong> ${match.email}</p>
-        <p><strong>संदर्भ संख्या:</strong> ${match.referenceNo}</p>
-      `;
-    } else {
-      document.getElementById("result").innerHTML = "<p class='not-found'>❌ अमान्य प्रमाण पत्र या डेटा नहीं मिला।</p>";
-    }
-  } catch (e) {
-    console.error(e);
-    document.getElementById("result").innerHTML = "<p class='not-found'>⚠️ सर्वर त्रुटि — कृपया पुनः प्रयास करें।</p>";
-  }
+if(!ref){
+  contentDiv.innerHTML = '<p class="error">सत्यापन के लिए कोई Reference नंबर नहीं मिला।</p>';
+} else {
+  fetch(sheetAPI + "?ref=" + encodeURIComponent(ref))
+    .then(res=>res.json())
+    .then(data=>{
+      if(!data || data.length===0){
+        contentDiv.innerHTML = '<p class="error">कोई प्रमाण पत्र नहीं मिला।</p>';
+      } else {
+        const row = data[0];
+        const [name,mobile,email,qrBase64,verifyLink,timestamp] = row;
+        contentDiv.innerHTML = `
+          <div class="details">
+            <p><span class="label">नाम:</span> ${name}</p>
+            <p><span class="label">मोबाइल:</span> ${mobile}</p>
+            <p><span class="label">ईमेल:</span> ${email}</p>
+            <p><span class="label">Reference No.:</span> ${ref}</p>
+            <p><span class="label">सत्यापन समय:</span> ${new Date(timestamp).toLocaleString('hi-IN')}</p>
+            <img src="${qrBase64}" width="150">
+          </div>
+        `;
+      }
+    })
+    .catch(err=>{
+      console.error(err);
+      contentDiv.innerHTML = '<p class="error">डेटा लाने में समस्या हुई।</p>';
+    });
 }
-
-verifyCertificate();
 </script>
 </body>
 </html>
