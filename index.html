@@ -121,7 +121,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; 
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec";
 let referenceNo = "";
 
 async function generateCertificate() {
@@ -144,34 +144,34 @@ async function generateCertificate() {
 
   referenceNo = `${timestamp}/Ksj/CRT`;
 
-  // ✅ Correct verification link (matches your GitHub repo path)
+  // ✅ Verification link
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
 
-  // ✅ Bigger QR for clarity
-  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
-
-  // Update certificate content
-  document.getElementById("nameText").textContent = name;
-  document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
-  document.getElementById("qrCode").src = qrUrl;
-  document.getElementById("qrLink").href = verifyLink;
-
-  // Wait for QR to load
-  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
-
-  document.getElementById("certificate").style.display = "block";
-  window.scrollTo(0, document.getElementById("certificate").offsetTop);
-
-  // Send data to Google Sheet
+  // Send data to Google Sheet (doPost will return Base64 QR)
   const formData = new FormData();
   formData.append("name", name);
   formData.append("mobile", mobile);
   formData.append("email", email);
   formData.append("referenceNo", referenceNo);
 
-  fetch(scriptURL, { method: "POST", body: formData })
-    .then(() => console.log("✅ Data saved successfully"))
-    .catch(err => console.error("❌ Error sending data!", err));
+  const res = await fetch(scriptURL, { method: "POST", body: formData });
+  const data = await res.json();
+
+  // ✅ Use Base64 QR from Apps Script response
+  const qrBase64 = data.qrBase64 || null;
+  const qrSrc = qrBase64 ? qrBase64 : `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
+
+  // Update certificate
+  document.getElementById("nameText").textContent = name;
+  document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
+  document.getElementById("qrCode").src = qrSrc;
+  document.getElementById("qrLink").href = verifyLink;
+  
+  // Wait QR to load
+  await new Promise(resolve => document.getElementById("qrCode").onload = resolve);
+
+  document.getElementById("certificate").style.display = "block";
+  window.scrollTo(0, document.getElementById("certificate").offsetTop);
 }
 
 async function downloadCertificate() {
