@@ -48,7 +48,7 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script Web App URL
+const scriptURL = "YOUR_DEPLOYED_WEB_APP_URL_HERE"; // Replace with your Apps Script Web App URL
 
 document.getElementById("generateBtn").addEventListener("click", async function() {
   const name = document.getElementById("nameInput").value.trim();
@@ -60,9 +60,11 @@ document.getElementById("generateBtn").addEventListener("click", async function(
   const timestamp = new Date().toISOString().replace(/[-:.TZ]/g,"");
   const referenceNo = `${timestamp}/Ksj/CRT`;
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
+
+  // Generate QR URL
   const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
 
-  // Show certificate immediately
+  // Show certificate
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
   const qrImg = document.getElementById("qrCode");
@@ -70,27 +72,18 @@ document.getElementById("generateBtn").addEventListener("click", async function(
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
 
-  // Convert QR image to Base64 after load
-  qrImg.onload = async function() {
-    const canvas = document.createElement("canvas");
-    canvas.width = qrImg.width; canvas.height = qrImg.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(qrImg, 0, 0);
-    const qrBase64 = canvas.toDataURL("image/png");
-
-    // Send to Apps Script
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        body: JSON.stringify({ name, mobile, email, qrBase64 }),
-        headers: { "Content-Type": "application/json" }
-      });
-      const json = await res.json();
-      console.log("Saved to Sheet:", json);
-    } catch(err) {
-      console.error("Error saving to Sheet:", err);
-    }
-  };
+  // Send data + QR URL to Apps Script
+  try {
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      body: JSON.stringify({ name, mobile, email, qrUrl }),
+      headers: { "Content-Type": "application/json" }
+    });
+    const json = await res.json();
+    console.log("Saved to Sheet:", json);
+  } catch(err) {
+    console.error("Error saving to Sheet:", err);
+  }
 });
 
 document.getElementById("downloadBtn").addEventListener("click", async function() {
