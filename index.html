@@ -19,7 +19,7 @@
       margin: 20px auto;
       display: none;
       border: 4px solid #d4af37;
-      background: url("https://egovlabksj.github.io/crt-generator/crt.png.png") no-repeat center center;
+      background: url("https://egovlabksj.github.io/crt-generator/certificate-bg1.png") no-repeat center center;
       background-size: cover;
       image-rendering: crisp-edges;
     }
@@ -68,8 +68,8 @@
       right: 30px;
       width: 90px;
       height: 90px;
-      border: 2px solid #000;
       background: #fff;
+      border: 2px solid #000;
       padding: 3px;
     }
     button {
@@ -98,8 +98,8 @@
   <input type="text" id="mobileInput" placeholder="मोबाइल नंबर दर्ज करें">
   <input type="email" id="emailInput" placeholder="ईमेल दर्ज करें">
   <br>
-  <button onclick="generateCertificate()">प्रमाण पत्र दिखाएं</button>
-  <button onclick="downloadCertificate()">PNG डाउनलोड करें</button>
+  <button id="showBtn">प्रमाण पत्र दिखाएं</button>
+  <button id="downloadBtn">PNG डाउनलोड करें</button>
 </div>
 
 <div id="certificate" class="certificate">
@@ -115,4 +115,77 @@
   </div>
   <div class="ref-no" id="refNoText"></div>
   <canvas id="qrCanvas" class="qr-code"></canvas>
-<
+</div>
+
+<!-- ✅ Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha512-GFgfYOPHYxjhIF2M/6ErtDn16YcMVRtYkqB4Kr2lJePwtTE0XAdDcxV2kqLkZfnEo5ZaonNPaTPQstXPR7pI4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbzcohePSKpEc64xp7JkuJgzW8IaYXAYfauyqAHR-U3QspIa-Gp5uL_X47vS3eXp2rFQ/exec";
+let referenceNo = "";
+
+// ✅ Button listeners (ensures functions exist)
+document.getElementById("showBtn").addEventListener("click", generateCertificate);
+document.getElementById("downloadBtn").addEventListener("click", downloadCertificate);
+
+function generateCertificate() {
+  const name = document.getElementById("nameInput").value.trim();
+  const mobile = document.getElementById("mobileInput").value.trim();
+  const email = document.getElementById("emailInput").value.trim();
+
+  if (!name || !mobile || !email) {
+    alert("कृपया सभी विवरण भरें।");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = now.getFullYear().toString() +
+                    String(now.getMonth()+1).padStart(2,'0') +
+                    String(now.getDate()).padStart(2,'0') +
+                    String(now.getHours()).padStart(2,'0') +
+                    String(now.getMinutes()).padStart(2,'0') +
+                    String(now.getSeconds()).padStart(2,'0');
+
+  referenceNo = `${timestamp}/Ksj/CRT`;
+
+  document.getElementById("nameText").textContent = name;
+  document.getElementById("refNoText").textContent = "ReferenceNo.-: " + referenceNo;
+
+  // ✅ Generate QR
+  const qrCanvas = document.getElementById('qrCanvas');
+  const qr = new QRious({
+    element: qrCanvas,
+    value: referenceNo,
+    size: 90,
+    level: 'H'
+  });
+
+  // ✅ Show certificate
+  const certDiv = document.getElementById("certificate");
+  certDiv.style.display = "block";
+  window.scrollTo({ top: certDiv.offsetTop, behavior: "smooth" });
+
+  // ✅ Send to Google Sheet
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({ name, mobile, email, referenceNo }),
+    headers: { "Content-Type": "application/json" },
+    mode: "no-cors"
+  })
+  .then(() => console.log("Data sent"))
+  .catch(err => console.error("Error:", err));
+}
+
+async function downloadCertificate() {
+  const cert = document.getElementById("certificate");
+  await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "certificate.png";
+    link.href = canvas.toDataURL("image/png", 1.0);
+    link.click();
+  });
+}
+</script>
+</body>
+</html>
