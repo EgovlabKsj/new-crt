@@ -27,8 +27,8 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 <input type="text" id="mobileInput" placeholder="मोबाइल नंबर दर्ज करें">
 <input type="email" id="emailInput" placeholder="ईमेल दर्ज करें">
 <br>
-<button onclick="generateCertificate()">प्रमाण पत्र दिखाएं</button>
-<button onclick="downloadCertificate()">PNG डाउनलोड करें</button>
+<button id="generateBtn">प्रमाण पत्र दिखाएं</button>
+<button id="downloadBtn">PNG डाउनलोड करें</button>
 </div>
 
 <div id="certificate" class="certificate">
@@ -48,62 +48,66 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script URL
 
-function generateCertificate() {
+document.getElementById("generateBtn").addEventListener("click", async function() {
   const name = document.getElementById("nameInput").value.trim();
   const mobile = document.getElementById("mobileInput").value.trim();
   const email = document.getElementById("emailInput").value.trim();
 
-  if(!name || !mobile || !email) { alert("कृपया सभी विवरण भरें। return"); return; }
+  if(!name || !mobile || !email) { alert("कृपया सभी विवरण भरें।"); return; }
 
   const timestamp = new Date().toISOString().replace(/[-:.TZ]/g,"");
-
   const referenceNo = `${timestamp}/Ksj/CRT`;
 
-  // Generate QR (Google Chart API)
+  // Generate QR URL
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
   const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
 
   // Convert QR to Base64
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = qrUrl;
-
-  img.onload = async function() {
-    // Draw QR on canvas to get Base64
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width; canvas.height = img.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    const qrBase64 = canvas.toDataURL("image/png");
-
-    // Show QR on certificate
-    document.getElementById("qrCode").src = qrBase64;
-    document.getElementById("nameText").textContent = name;
-    document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
-    document.getElementById("certificate").style.display = "block";
-    window.scrollTo(0, document.getElementById("certificate").offsetTop);
-
-    // Send data to Apps Script
-    const data = { name, mobile, email, qrBase64 };
-    fetch(scriptURL, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } })
-    .then(res => res.json())
-    .then(r => console.log("Saved to Sheet:", r))
-    .catch(err => console.error("Error saving:", err));
-  }
-}
-
-async function downloadCertificate() {
-  const cert = document.getElementById("certificate");
-  await html2canvas(cert, { scale: 4, useCORS: true }).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "certificate.png";
-    link.href = canvas.toDataURL("image/png",1.0);
-    link.click();
+  const qrBase64 = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = qrUrl;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => reject("QR image load failed");
   });
-}
-</script>
 
+  // Update certificate
+  document.getElementById("qrCode").src = qrBase64;
+  document.getElementById("nameText").textContent = name;
+  document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
+  document.getElementById("certificate").style.display = "block";
+  window.scrollTo(0, document.getElementById("certificate").offsetTop);
+
+  // Send data to Apps Script
+  try {
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      body: JSON.stringify({ name, mobile, email, qrBase64 }),
+      headers: { "Content-Type": "application/json" }
+    });
+    const json = await res.json();
+    console.log("Saved to Sheet:", json);
+  } catch(err) {
+    console.error("Error saving to Sheet:", err);
+  }
+});
+
+document.getElementById("downloadBtn").addEventListener("click", async function() {
+  const cert = document.getElementById("certificate");
+  const canvas = await html2canvas(cert, { scale: 4, useCORS: true });
+  const link = document.createElement("a");
+  link.download = "certificate.png";
+  link.href = canvas.toDataURL("image/png",1.0);
+  link.click();
+});
+</script>
 </body>
 </html>
