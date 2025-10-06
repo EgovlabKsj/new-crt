@@ -46,10 +46,7 @@ input { padding: 8px; font-size: 16px; width: 250px; margin: 5px; }
 <img id="qrCode" alt="QR Code">
 </div>
 
-<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
 <script>
 const scriptURL = "https://script.google.com/macros/s/AKfycbyXGMzsFBWYuxy84XYa8CrjHGgrMElyEIW93YUZHsn4mOjDtFl--0UuR5r6CdqJe8la/exec"; // Replace with your Apps Script Web App URL
 
@@ -63,29 +60,37 @@ document.getElementById("generateBtn").addEventListener("click", async function(
   const timestamp = new Date().toISOString().replace(/[-:.TZ]/g,"");
   const referenceNo = `${timestamp}/Ksj/CRT`;
   const verifyLink = `https://EgovlabKsj.github.io/new-crt/verify.html?ref=${encodeURIComponent(referenceNo)}`;
-
-  // Generate QR as Base64
-  const qrBase64 = await QRCode.toDataURL(verifyLink, { width: 150, margin: 1 });
+  
+  // Generate QR via Google Chart API
+  const qrImg = document.getElementById("qrCode");
+  qrImg.src = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(verifyLink)}`;
 
   // Show certificate
   document.getElementById("nameText").textContent = name;
   document.getElementById("refNoText").textContent = "Reference No.: " + referenceNo;
-  document.getElementById("qrCode").src = qrBase64;
   document.getElementById("certificate").style.display = "block";
   window.scrollTo(0, document.getElementById("certificate").offsetTop);
 
-  // Send to Apps Script
-  try {
-    const res = await fetch(scriptURL, {
-      method: "POST",
-      body: JSON.stringify({ name, mobile, email, qrBase64 }),
-      headers: { "Content-Type": "application/json" }
-    });
-    const json = await res.json();
-    console.log("Saved to Sheet:", json);
-  } catch(err) {
-    console.error("Error saving to Sheet:", err);
-  }
+  // Wait for QR to load, convert to Base64
+  qrImg.onload = async function() {
+    const canvas = document.createElement("canvas");
+    canvas.width = qrImg.width; canvas.height = qrImg.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(qrImg, 0, 0);
+    const qrBase64 = canvas.toDataURL("image/png");
+
+    // Send to Apps Script
+    try {
+      await fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify({ name, mobile, email, qrBase64 }),
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log("Saved to Sheet successfully");
+    } catch(err) {
+      console.error("Error saving to Sheet:", err);
+    }
+  };
 });
 
 document.getElementById("downloadBtn").addEventListener("click", async function() {
